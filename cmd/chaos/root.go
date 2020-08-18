@@ -20,8 +20,7 @@ func newRootCmd(actionConfig *action.Configuration, out io.Writer, args []string
 
 	// Add subcommands
 	cmd.AddCommand(
-	// TODO: Implement chaos init cmd to onboard target cluster
-	// newInitCmd(out),
+		newInitCmd(actionConfig, out),
 	)
 
 	return cmd, nil
