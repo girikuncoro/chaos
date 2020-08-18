@@ -1,9 +1,11 @@
 package action
 
 import (
-	"fmt"
+	"bytes"
 
 	"github.com/girikuncoro/chaos/cmd/chaos/installer"
+	"github.com/pkg/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 // Init performs an init operation.
@@ -35,34 +37,18 @@ func (i *Init) Run() error {
 		return err
 	}
 
-	fmt.Println(manifests)
-
 	// TODO: init local config
 
-	// TODO: Create Litmus namespace
-	//
-	// ns := &v1.Namespace{
-	// 	TypeMeta: metav1.TypeMeta{
-	// 		APIVersion: "v1",
-	// 		Kind:       "Namespace",
-	// 	},
-	// 	ObjectMeta: metav1.ObjectMeta{
-	// 		Name: "litmus",
-	// 		Labels: map[string]string{
-	// 			"name": "litmus",
-	// 		},
-	// 	},
-	// }
+	for _, manifest := range manifests {
+		res, err := i.cfg.KubeClient.Build(bytes.NewBufferString(manifest), true)
+		if err != nil {
+			return errors.Wrap(err, "unable to build kubernetes objects from manifest")
+		}
 
-	// TODO: build and create the Kubernetes resource
-	//
-	// resourceList, err := i.cfg.KubeClient.Build(bytes.NewBuffer(buf), true)
-	// if err != nil {
-	// 	return err
-	// }
-	// if _, err := i.cfg.KubeClient.Create(resourceList); err != nil && !apierrors.IsAlreadyExists(err) {
-	// 	return err
-	// }
+		if _, err := i.cfg.KubeClient.Create(res); err != nil && !apierrors.IsAlreadyExists(err) {
+			return err
+		}
+	}
 
 	return nil
 }

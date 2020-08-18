@@ -1,9 +1,11 @@
 package kube
 
 import (
+	"io"
 	"sync"
 
 	"github.com/pkg/errors"
+	v1 "k8s.io/api/core/v1"
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -53,6 +55,39 @@ func (c *Client) Create(resources ResourceList) (*Result, error) {
 		return nil, err
 	}
 	return &Result{Created: resources}, nil
+}
+
+func (c *Client) namespace() string {
+	if c.Namespace != "" {
+		return c.Namespace
+	}
+	if ns, _, err := c.Factory.ToRawKubeConfigLoader().Namespace(); err == nil {
+		return ns
+	}
+	return v1.NamespaceDefault
+}
+
+// newBuilder returns a new resource builder for structured api objects.
+func (c *Client) newBuilder() *resource.Builder {
+	return c.Factory.NewBuilder().
+		ContinueOnError().
+		NamespaceParam(c.namespace()).
+		DefaultNamespace().
+		Flatten()
+}
+
+// Build validates for Kubernetes objects and returns unstructured infos.
+func (c *Client) Build(reader io.Reader, validate bool) (ResourceList, error) {
+	schema, err := c.Factory.Validator(validate)
+	if err != nil {
+		return nil, err
+	}
+	result, err := c.newBuilder().
+		Unstructured().
+		Schema(schema).
+		Stream(reader, "").
+		Do().Infos()
+	return result, err
 }
 
 // IsReachable tests connectivity to the cluster
