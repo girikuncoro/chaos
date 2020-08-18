@@ -1,7 +1,8 @@
 package installer
 
 const (
-	defaultImage = "litmuschaos/chaos-operator"
+	defaultImage     = "litmuschaos/chaos-operator"
+	defaultNamespace = "litmus"
 )
 
 // Options control how to install Litmus into a cluster, upgrade, and uninstall Litmus from a cluster.

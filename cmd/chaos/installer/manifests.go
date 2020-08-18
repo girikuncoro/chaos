@@ -8,19 +8,26 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// Install uses Kubernetes client to install Litmus chaos operator.
-func Install() error {
-	// TODO: create deployment, crd of Litmus
-	return nil
-}
+const (
+	deploymentName     = "chaos-operator-ce"
+	serviceAccountName = "litmus"
+)
 
 // LitmusManifests gets the Deployment, ServiceAccount manifests
 func LitmusManifests(opts *Options) ([]string, error) {
+	if opts.Namespace == "" {
+		opts.Namespace = defaultNamespace
+	}
+
+	ns := Namespace(opts.Namespace)
+	sa := ServiceAccount(opts.Namespace)
 	dep, err := Deployment(opts)
 	if err != nil {
 		return []string{}, err
 	}
-	objs := []runtime.Object{dep}
+
+	objs := []runtime.Object{ns, sa, dep}
+
 	manifests := make([]string, len(objs))
 	for i, obj := range objs {
 		o, err := yaml.Marshal(obj)
@@ -32,14 +39,53 @@ func LitmusManifests(opts *Options) ([]string, error) {
 	return manifests, err
 }
 
+// Namespace gets a namespace object that can be used to generate
+// manifest as string.
+func Namespace(name string) *v1.Namespace {
+	ns := &v1.Namespace{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Namespace",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+			Labels: map[string]string{
+				"name": name,
+			},
+		},
+	}
+	return ns
+}
+
+// ServiceAccount gets a service account object that can be used to generate
+// manifest as string.
+func ServiceAccount(namespace string) *v1.ServiceAccount {
+	sa := &v1.ServiceAccount{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "ServiceAccount",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      serviceAccountName,
+			Namespace: namespace,
+			Labels: map[string]string{
+				"name": serviceAccountName,
+			},
+		},
+	}
+	return sa
+}
+
+// Deployment gets a deployment object that can be used to generate
+// manifest as string.
 func Deployment(opts *Options) (*appsv1.Deployment, error) {
 	dep, err := generateDeployment(opts)
 	if err != nil {
 		return nil, err
 	}
 	dep.TypeMeta = metav1.TypeMeta{
-		Kind:       "Deployment",
 		APIVersion: "apps/v1",
+		Kind:       "Deployment",
 	}
 	return dep, nil
 }
@@ -49,7 +95,7 @@ func generateDeployment(opts *Options) (*appsv1.Deployment, error) {
 	d := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: opts.Namespace,
-			Name:      "litmus",
+			Name:      deploymentName,
 			Labels:    labels,
 		},
 		Spec: appsv1.DeploymentSpec{
