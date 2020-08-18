@@ -10,6 +10,7 @@ import (
 
 	"k8s.io/klog"
 
+	"github.com/girikuncoro/chaos/pkg/action"
 	"github.com/girikuncoro/chaos/pkg/cli"
 	"github.com/spf13/pflag"
 )

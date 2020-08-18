@@ -6,13 +6,10 @@ import (
 	"github.com/pkg/errors"
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/deprecated/scheme"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 )
-
-var metadataAccessor = meta.NewAccessor()
 
 // Client represents a client that communicates with the Kubernetes API.
 type Client struct {
