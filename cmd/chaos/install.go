@@ -40,7 +40,7 @@ func runInstall(args []string, client *action.Install, out io.Writer) error {
 	// When we have repo that contains many charts, this needs FIX.
 	chart := args[0]
 
-	cp, err := client.LocateChart(chart, settings)
+	cp, err := client.ChartPathOptions.LocateChart(chart, settings)
 	if err != nil {
 		return err
 	}
