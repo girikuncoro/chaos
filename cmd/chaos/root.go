@@ -21,6 +21,7 @@ func newRootCmd(actionConfig *action.Configuration, out io.Writer, args []string
 	// Add subcommands
 	cmd.AddCommand(
 		newInitCmd(actionConfig, out),
+		newRepoCmd(out),
 	)
 
 	return cmd, nil

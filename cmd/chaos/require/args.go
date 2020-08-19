@@ -16,3 +16,19 @@ func NoArgs(cmd *cobra.Command, args []string) error {
 	}
 	return nil
 }
+
+// ExactArgs returns error if there are no exactly n args.
+func ExactArgs(n int) cobra.PositionalArgs {
+	return func(cmd *cobra.Command, args []string) error {
+		if len(args) != n {
+			return errors.Errorf(
+				"%q requires %d %s\n\nUsage: %s",
+				cmd.CommandPath(),
+				n,
+				"arguments",
+				cmd.UseLine(),
+			)
+		}
+		return nil
+	}
+}

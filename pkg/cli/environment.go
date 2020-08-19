@@ -3,10 +3,12 @@ package cli
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/spf13/pflag"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/client-go/util/homedir"
 )
 
 // EnvSettings describes all of the environment settings.
@@ -22,13 +24,16 @@ type EnvSettings struct {
 	KubeAPIServer string
 	// Debug indicates whether or not Chaos is running in Debug mode.
 	Debug bool
+	// RepositoryConfig is the path to the repositories file
+	RepositoryConfig string
 }
 
 func New() *EnvSettings {
 	env := &EnvSettings{
-		namespace:     os.Getenv("CHAOS_NAMESPACE"),
-		KubeContext:   os.Getenv("CHAOS_KUBECONTEXT"),
-		KubeAPIServer: os.Getenv("CHAOS_KUBEAPISERVER"),
+		namespace:        os.Getenv("CHAOS_NAMESPACE"),
+		KubeContext:      os.Getenv("CHAOS_KUBECONTEXT"),
+		KubeAPIServer:    os.Getenv("CHAOS_KUBEAPISERVER"),
+		RepositoryConfig: envOr("CHAOS_REPOSITORY_CONFIG", configPath("repositories.yaml")),
 	}
 	env.Debug, _ = strconv.ParseBool(os.Getenv("CHAOS_DEBUG"))
 
@@ -51,11 +56,19 @@ func (s *EnvSettings) AddFlags(fs *pflag.FlagSet) {
 	fs.BoolVar(&s.Debug, "debug", s.Debug, "enable verbose output")
 }
 
+func envOr(name, def string) string {
+	if v, ok := os.LookupEnv(name); ok {
+		return v
+	}
+	return def
+}
+
 func (s *EnvSettings) EnvVars() map[string]string {
 	envvars := map[string]string{
-		"CHAOS_BIN":       os.Args[0],
-		"CHAOS_DEBUG":     fmt.Sprint(s.Debug),
-		"CHAOS_NAMESPACE": s.Namespace(),
+		"CHAOS_BIN":               os.Args[0],
+		"CHAOS_DEBUG":             fmt.Sprint(s.Debug),
+		"CHAOS_NAMESPACE":         s.Namespace(),
+		"CHAOS_REPOSITORY_CONFIG": s.RepositoryConfig,
 	}
 	if s.KubeConfig != "" {
 		envvars["KUBECONFIG"] = s.KubeConfig
@@ -74,4 +87,8 @@ func (s *EnvSettings) Namespace() string {
 // RESTClientGetter gets the kubeconfig from EnvSettings.
 func (s *EnvSettings) RESTClientGetter() genericclioptions.RESTClientGetter {
 	return s.config
+}
+
+func configPath(elem ...string) string {
+	return filepath.Join(homedir.HomeDir(), ".chaos", filepath.Join(elem...))
 }
