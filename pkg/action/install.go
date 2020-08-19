@@ -13,9 +13,13 @@ import (
 // Install performs experiment chart installation in given namespace.
 type Install struct {
 	cfg *Configuration
+	ChartPathOptions
 
 	Namespace string
 }
+
+// ChartPathOptions captures common options used for controlling chart paths
+type ChartPathOptions struct{}
 
 // NewInstall creates a new Install object with given configuration.
 func NewInstall(cfg *Configuration) *Install {
@@ -26,7 +30,7 @@ func NewInstall(cfg *Configuration) *Install {
 
 // LocateChart looks for a chart directory in known places.
 // Currently it excepts charts to be present in cache directory.
-func (i *Install) LocateChart(name string, settings *cli.EnvSettings) (string, error) {
+func (c *ChartPathOptions) LocateChart(name string, settings *cli.EnvSettings) (string, error) {
 	f, err := repo.LoadFile(settings.RepositoryConfig)
 	if err != nil || len(f.Repositories) == 0 {
 		return "", errors.Wrap(err, "no repositories exist, need to add repo first")

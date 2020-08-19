@@ -2,10 +2,16 @@ package main
 
 import (
 	"github.com/girikuncoro/chaos/pkg/cli/output"
+	"github.com/girikuncoro/chaos/pkg/cli/values"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 const outputFlag = "output"
+
+func addValueOptionsFlags(f *pflag.FlagSet, v *values.Options) {
+	f.StringArrayVar(&v.Values, "set", []string{}, "set values on the command line")
+}
 
 // bindOutputFlag will add output flag to given command
 func bindOutputFlag(cmd *cobra.Command, varRef *output.Format) {

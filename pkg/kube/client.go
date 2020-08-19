@@ -1,13 +1,16 @@
 package kube
 
 import (
+	"context"
 	"io"
 	"sync"
 
 	"github.com/pkg/errors"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/deprecated/scheme"
@@ -88,6 +91,20 @@ func (c *Client) Build(reader io.Reader, validate bool) (ResourceList, error) {
 		Stream(reader, "").
 		Do().Infos()
 	return result, err
+}
+
+// GetDeployment fetches deployment object from given name
+func (c *Client) GetDeployment(name, namespace string) (*appsv1.Deployment, error) {
+	client, err := c.Factory.KubernetesClientSet()
+	if err != nil {
+		return nil, errors.Wrap(err, "Kubernetes cluster unreachable")
+	}
+
+	dep, err := client.AppsV1().Deployments(namespace).Get(context.Background(), name, metav1.GetOptions{})
+	if err != nil {
+		return nil, errors.Wrapf(err, "deployment %s is not found", name)
+	}
+	return dep, nil
 }
 
 // IsReachable tests connectivity to the cluster
