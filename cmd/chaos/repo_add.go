@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/girikuncoro/chaos/cmd/chaos/require"
+	"github.com/girikuncoro/chaos/pkg/getter"
 	"github.com/girikuncoro/chaos/pkg/repo"
 	"github.com/gofrs/flock"
 	"github.com/pkg/errors"
@@ -79,12 +80,17 @@ func (o *repoAddOptions) run(out io.Writer) error {
 		URL:  o.url,
 	}
 
-	_, err = repo.NewChartRepository(&c)
+	client, _ := getter.NewHTTPGetter()
+	r, err := repo.NewChartRepository(&c, client)
 	if err != nil {
 		return err
 	}
 
-	// TODO: download index file, update, and write
+	if _, err := r.DownloadExperimentFile(); err != nil {
+		return errors.Wrapf(err, "looks like %q is not a valid experiment chart repository or cannot be reached", o.url)
+	}
+
+	// TODO: update, and write
 
 	return nil
 }

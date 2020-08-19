@@ -3,12 +3,11 @@ package cli
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strconv"
 
+	"github.com/girikuncoro/chaos/pkg/chaospath"
 	"github.com/spf13/pflag"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"k8s.io/client-go/util/homedir"
 )
 
 // EnvSettings describes all of the environment settings.
@@ -33,7 +32,7 @@ func New() *EnvSettings {
 		namespace:        os.Getenv("CHAOS_NAMESPACE"),
 		KubeContext:      os.Getenv("CHAOS_KUBECONTEXT"),
 		KubeAPIServer:    os.Getenv("CHAOS_KUBEAPISERVER"),
-		RepositoryConfig: envOr("CHAOS_REPOSITORY_CONFIG", configPath("repositories.yaml")),
+		RepositoryConfig: envOr("CHAOS_REPOSITORY_CONFIG", chaospath.ConfigPath("repositories.yaml")),
 	}
 	env.Debug, _ = strconv.ParseBool(os.Getenv("CHAOS_DEBUG"))
 
@@ -87,8 +86,4 @@ func (s *EnvSettings) Namespace() string {
 // RESTClientGetter gets the kubeconfig from EnvSettings.
 func (s *EnvSettings) RESTClientGetter() genericclioptions.RESTClientGetter {
 	return s.config
-}
-
-func configPath(elem ...string) string {
-	return filepath.Join(homedir.HomeDir(), ".chaos", filepath.Join(elem...))
 }
