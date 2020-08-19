@@ -47,11 +47,11 @@ func addExecuteFlags(cmd *cobra.Command, f *pflag.FlagSet, client *action.Execut
 func runExecute(args []string, client *action.Execute, valueOpts *values.Options, out io.Writer) error {
 	client.Namespace = settings.Namespace()
 
-	name, exp, err := client.NameAndChart(args)
+	name, exp, dep, err := client.ExperimentAndDeployment(args)
 	if err != nil {
 		return err
 	}
 	client.TestName = name
-	client.ExperimentName = exp
-	return client.Run()
+	client.Experiment = exp
+	return client.Run(dep)
 }

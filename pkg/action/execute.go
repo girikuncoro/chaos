@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	rbacv1beta1 "k8s.io/api/rbac/v1beta1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -21,11 +22,11 @@ type Execute struct {
 	cfg *Configuration
 	ChartPathOptions
 
-	Namespace      string
-	TestName       string
-	ExperimentName string
-	Wait           bool
-	Timeout        time.Duration
+	Namespace  string
+	TestName   string
+	Experiment string
+	Wait       bool
+	Timeout    time.Duration
 }
 
 // NewExecute creates a new Execute object with given configuration.
@@ -35,36 +36,36 @@ func NewExecute(cfg *Configuration) *Execute {
 	}
 }
 
-// NameAndChart returns name and experirment that should be used. This returns error when deployment name is invalid.
-func (e *Execute) NameAndChart(args []string) (string, string, error) {
+// ExperimentAndDeployment returns name and experirment that should be used. This returns error when deployment name is invalid.
+func (e *Execute) ExperimentAndDeployment(args []string) (string, string, *appsv1.Deployment, error) {
 	name := args[0]
 	exp := args[2]
 
 	resourceKind, resourceName, err := resourceKindAndName(args[1])
 	if err != nil {
-		return name, exp, err
+		return name, exp, nil, err
 	}
 
 	if resourceKind != "deployment" && resourceKind != "deploy" {
-		return name, exp, errors.New("currently only supports executing experiment on Deployment resource kind")
+		return name, exp, nil, errors.New("currently only supports executing experiment on Deployment resource kind")
 	}
 
 	// TODO: Refactor to pass runtime.Object and inteface with generic Get instead
-	_, err = e.cfg.KubeClient.GetDeployment(resourceName, e.Namespace)
+	dep, err := e.cfg.KubeClient.GetDeployment(resourceName, e.Namespace)
 	if err != nil {
-		return name, exp, errors.Errorf("deployment %s in namespace %s doesn't exist", resourceName, e.Namespace)
+		return name, exp, nil, errors.Errorf("deployment %s in namespace %s doesn't exist", resourceName, e.Namespace)
 	}
 
 	// TODO: Validate chaos experiment exists in the target cluster
 
-	return name, exp, nil
+	return name, exp, dep, nil
 }
 
 // Run executes the execute operation.
-func (e *Execute) Run() error {
-	sa := ServiceAccount(e.ExperimentName+"-sa", e.Namespace)
-	r := Role(e.ExperimentName+"-sa", e.Namespace)
-	rb := RoleBinding(e.ExperimentName+"-sa", e.Namespace)
+func (e *Execute) Run(dep *appsv1.Deployment) error {
+	sa := ServiceAccount(e.Experiment+"-sa", e.Namespace)
+	r := Role(e.Experiment+"-sa", e.Namespace)
+	rb := RoleBinding(e.Experiment+"-sa", e.Namespace)
 
 	objs := []runtime.Object{sa, r, rb}
 
@@ -84,7 +85,10 @@ func (e *Execute) Run() error {
 		}
 	}
 
-	// Step 4: Annotate deployment
+	err := e.cfg.KubeClient.AnnotateDeployment(dep, map[string]string{"litmuschaos.io/chaos": "true"})
+	if err != nil {
+		return errors.Wrapf(err, "unable to annotate %s deployment object", dep.ObjectMeta.Name)
+	}
 
 	// Step 5: Chaos Engine
 
