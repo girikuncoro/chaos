@@ -2,8 +2,10 @@ package main
 
 import (
 	"io"
+	"os"
 
 	"github.com/girikuncoro/chaos/cmd/chaos/require"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -22,6 +24,11 @@ func newRepoCmd(out io.Writer) *cobra.Command {
 	}
 
 	cmd.AddCommand(newRepoAddCmd(out))
+	cmd.AddCommand(newRepoListCmd(out))
 
 	return cmd
+}
+
+func isNotExist(err error) bool {
+	return os.IsNotExist(errors.Cause(err))
 }

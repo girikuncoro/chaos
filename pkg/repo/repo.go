@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 )
 
@@ -21,6 +22,18 @@ func NewFile() *File {
 		Generated:    time.Now(),
 		Repositories: []*Entry{},
 	}
+}
+
+// LoadFile takes a file at given path and returns File object
+func LoadFile(path string) (*File, error) {
+	r := new(File)
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return r, errors.Wrapf(err, "could not load repositories file (%s)", path)
+	}
+
+	err = yaml.Unmarshal(b, r)
+	return r, err
 }
 
 // Add adds one or more repo entries to repo file.
