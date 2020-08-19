@@ -28,6 +28,23 @@ func (r *File) Add(re ...*Entry) {
 	r.Repositories = append(r.Repositories, re...)
 }
 
+// Update will replace on or more repo entries in a repo file.
+func (r *File) Update(re ...*Entry) {
+	for _, target := range re {
+		r.update(target)
+	}
+}
+
+func (r *File) update(e *Entry) {
+	for j, repo := range r.Repositories {
+		if repo.Name == e.Name {
+			r.Repositories[j] = e
+			return
+		}
+	}
+	r.Add(e)
+}
+
 // Has returns true if given name exists in repository.
 func (r *File) Has(name string) bool {
 	entry := r.Get(name)
