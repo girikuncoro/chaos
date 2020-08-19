@@ -14,8 +14,9 @@ import (
 
 // Entry represents a collection of parameters for experiment chart repository
 type Entry struct {
-	Name string `json:"name"`
-	URL  string `json:"url"`
+	Name           string `json:"name"`
+	URL            string `json:"url"`
+	ExperimentFile string `json:"experimentFile"`
 }
 
 // ChartRepository represents a chart repository

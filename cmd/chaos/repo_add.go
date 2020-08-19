@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -75,22 +76,26 @@ func (o *repoAddOptions) run(out io.Writer) error {
 		return errors.Errorf("repository name (%s) already exists, please specify different name", o.name)
 	}
 
-	c := repo.Entry{
+	e := repo.Entry{
 		Name: o.name,
 		URL:  o.url,
 	}
 
 	client, _ := getter.NewHTTPGetter()
-	r, err := repo.NewChartRepository(&c, client)
+	r, err := repo.NewChartRepository(&e, client)
 	if err != nil {
 		return err
 	}
 
-	if _, err := r.DownloadExperimentFile(); err != nil {
+	if e.ExperimentFile, err = r.DownloadExperimentFile(); err != nil {
 		return errors.Wrapf(err, "looks like %q is not a valid experiment chart repository or cannot be reached", o.url)
 	}
 
-	// TODO: update, and write
+	f.Update(&e)
 
+	if err := f.WriteFile(o.repoFile, 0644); err != nil {
+		return err
+	}
+	fmt.Fprintf(out, "%q has been added to your repositories\n", o.name)
 	return nil
 }
