@@ -22,6 +22,7 @@ func newRootCmd(actionConfig *action.Configuration, out io.Writer, args []string
 	cmd.AddCommand(
 		newInitCmd(actionConfig, out),
 		newRepoCmd(out),
+		newInstallCmd(actionConfig, out),
 	)
 
 	return cmd, nil
