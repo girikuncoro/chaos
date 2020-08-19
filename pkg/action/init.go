@@ -37,8 +37,6 @@ func (i *Init) Run() error {
 		return err
 	}
 
-	// TODO: init local config
-
 	for _, manifest := range manifests {
 		res, err := i.cfg.KubeClient.Build(bytes.NewBufferString(manifest), true)
 		if err != nil {

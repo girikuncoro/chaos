@@ -32,3 +32,19 @@ func ExactArgs(n int) cobra.PositionalArgs {
 		return nil
 	}
 }
+
+// MinimumNArgs returns error if there's not at least N args.
+func MinimumNArgs(n int) cobra.PositionalArgs {
+	return func(cmd *cobra.Command, args []string) error {
+		if len(args) < n {
+			return errors.Errorf(
+				"%q requires at least %d %s\n\nUsage:  %s",
+				cmd.CommandPath(),
+				n,
+				"arguments",
+				cmd.UseLine(),
+			)
+		}
+		return nil
+	}
+}
