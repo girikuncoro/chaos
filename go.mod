@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/docker/docker v1.13.1
 	github.com/gofrs/flock v0.7.1
+	github.com/gosuri/uitable v0.0.4
 	github.com/hashicorp/go-getter v1.4.1
 	github.com/pkg/errors v0.8.1
 	github.com/spf13/cobra v1.0.0
