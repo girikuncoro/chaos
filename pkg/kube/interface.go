@@ -14,6 +14,8 @@ type Interface interface {
 	Create(resources ResourceList) (*Result, error)
 	// GetDeployment fetches deployment object from given name
 	GetDeployment(name, namespace string) (*appsv1.Deployment, error)
+	// AnnotateDeployment annotates deployment object.
+	AnnotateDeployment(dep *appsv1.Deployment, annotations map[string]string) error
 	// Build creates a resource list from a Reader
 	Build(reader io.Reader, validate bool) (ResourceList, error)
 	// IsReachable checks whether the client is able to connect to the cluster

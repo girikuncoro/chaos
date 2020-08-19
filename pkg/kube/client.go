@@ -10,6 +10,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/cli-runtime/pkg/resource"
@@ -19,6 +20,8 @@ import (
 
 // ErrNoObjectsVisited indicates that during a visit operation, no matching objects were found.
 var ErrNoObjectsVisited = errors.New("no objects visited")
+
+var accessor = meta.NewAccessor()
 
 // Client represents a client that communicates with the Kubernetes API.
 type Client struct {
@@ -105,6 +108,25 @@ func (c *Client) GetDeployment(name, namespace string) (*appsv1.Deployment, erro
 		return nil, errors.Wrapf(err, "deployment %s is not found", name)
 	}
 	return dep, nil
+}
+
+// AnnotateDeployment annotates specified deployment with annotations
+func (c *Client) AnnotateDeployment(dep *appsv1.Deployment, annotations map[string]string) error {
+	client, err := c.Factory.KubernetesClientSet()
+	if err != nil {
+		return errors.Wrap(err, "Kubernetes cluster unreachable")
+	}
+
+	err = accessor.SetAnnotations(dep, annotations)
+	if err != nil {
+		return errors.Wrap(err, "failed setting annotation on deployment")
+	}
+
+	_, err = client.AppsV1().Deployments(dep.ObjectMeta.Namespace).Update(context.Background(), dep, metav1.UpdateOptions{})
+	if err != nil {
+		return errors.Wrapf(err, "failed updating annotation of deployment %s object", dep.ObjectMeta.Name)
+	}
+	return nil
 }
 
 // IsReachable tests connectivity to the cluster
