@@ -38,6 +38,7 @@ func LitmusManifests(opts *Options) ([]string, error) {
 		}
 		manifests[i] = string(o)
 	}
+	manifests = append(manifests, chaosEngineCRD, chaosExperimentCRD, chaosResultCRD)
 	return manifests, nil
 }
 
