@@ -4,7 +4,7 @@ package installer
 //
 // TODO(giri): Need to convert this to CRD code
 
-const chaosEngineCRD = `
+var chaosEngineCRD = `
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
@@ -253,7 +253,7 @@ spec:
       storage: true
 `
 
-const chaosExperimentCRD = `
+var chaosExperimentCRD = `
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
@@ -405,7 +405,7 @@ spec:
       storage: true
 `
 
-const chaosResultCRD = `
+var chaosResultCRD = `
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
