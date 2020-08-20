@@ -1,7 +1,6 @@
 package kube
 
 import (
-	"context"
 	"io"
 	"sync"
 
@@ -103,7 +102,7 @@ func (c *Client) GetDeployment(name, namespace string) (*appsv1.Deployment, erro
 		return nil, errors.Wrap(err, "Kubernetes cluster unreachable")
 	}
 
-	dep, err := client.AppsV1().Deployments(namespace).Get(context.Background(), name, metav1.GetOptions{})
+	dep, err := client.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "deployment %s is not found", name)
 	}
@@ -122,7 +121,7 @@ func (c *Client) AnnotateDeployment(dep *appsv1.Deployment, annotations map[stri
 		return errors.Wrap(err, "failed setting annotation on deployment")
 	}
 
-	_, err = client.AppsV1().Deployments(dep.ObjectMeta.Namespace).Update(context.Background(), dep, metav1.UpdateOptions{})
+	_, err = client.AppsV1().Deployments(dep.ObjectMeta.Namespace).Update(dep)
 	if err != nil {
 		return errors.Wrapf(err, "failed updating annotation of deployment %s object", dep.ObjectMeta.Name)
 	}
@@ -132,9 +131,6 @@ func (c *Client) AnnotateDeployment(dep *appsv1.Deployment, annotations map[stri
 // IsReachable tests connectivity to the cluster
 func (c *Client) IsReachable() error {
 	client, err := c.Factory.KubernetesClientSet()
-	if err == genericclioptions.ErrEmptyConfig {
-		return errors.New("Kubernetes cluster unreachable")
-	}
 	if err != nil {
 		return errors.Wrap(err, "Kubernetes cluster unreachable")
 	}
@@ -179,7 +175,7 @@ func batchPerform(infos ResourceList, fn func(*resource.Info) error, errs chan<-
 }
 
 func createResource(info *resource.Info) error {
-	obj, err := resource.NewHelper(info.Client, info.Mapping).Create(info.Namespace, true, info.Object)
+	obj, err := resource.NewHelper(info.Client, info.Mapping).Create(info.Namespace, true, info.Object, nil)
 	if err != nil {
 		return err
 	}

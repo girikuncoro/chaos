@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	chaosv1alpha1 "github.com/litmuschaos/chaos-operator/pkg/apis/litmuschaos/v1alpha1"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -183,4 +184,10 @@ func RoleBinding(name, namespace string) *rbacv1beta1.RoleBinding {
 		},
 	}
 	return rb
+}
+
+// ChaosEngine
+func ChaosEngine() *chaosv1alpha1.ChaosEngine {
+	ce := &chaosv1alpha1.ChaosEngine{}
+	return ce
 }
