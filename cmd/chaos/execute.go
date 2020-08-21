@@ -41,6 +41,13 @@ func newExecuteCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
 func addExecuteFlags(cmd *cobra.Command, f *pflag.FlagSet, client *action.Execute, valueOpts *values.Options) {
 	f.BoolVar(&client.Wait, "wait", false, "if set, will wait until chaos experiments have been completely executed. It will wait for as long as --timeout")
 	f.DurationVar(&client.Timeout, "timeout", 300*time.Second, "time to wait for waiting experiment completion")
+	f.StringVar(&client.AnnotationCheck, "annotation-check", "true", "flag to control annotation checks on applications as prerequisites for chaos")
+	f.StringVar(&client.EngineState, "engine-state", "active", "flag to control the state of the chaosengine")
+	f.StringVar(&client.AuxiliaryAppInfo, "auxiliary-app-info", "", "flag to specify one or more app namespace-label pairs whose health is also monitored as part of the chaos experiment")
+	f.StringVar(&client.AppLabel, "app-label", "", "flag to specify unique label of application under test")
+	f.StringVar(&client.AppKind, "app-kind", "", "flag to specify resource kind of application under test")
+	f.BoolVar(&client.Monitoring, "monitoring", false, "flag to enable collection of simple chaos metrics")
+	f.StringVar(&client.JobCleanupPolicy, "job-cleanup-policy", "delete", "flag to control cleanup of chaos experiment job post execution of chaos")
 	addValueOptionsFlags(f, valueOpts)
 }
 

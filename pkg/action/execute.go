@@ -16,18 +16,33 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// ErrInvalidArgFormat provides error message when the resource argument is not in expected format.
 var ErrInvalidArgFormat = errors.New("should provide argument with format 'resource_kind/resource_name'")
 
-// Execute performs an exec operation.
+// Execute performs an chaos test execution operation.
 type Execute struct {
 	cfg *Configuration
 	ChartPathOptions
+	ChaosTestOptions
 
-	Namespace  string
 	TestName   string
 	Experiment string
 	Wait       bool
 	Timeout    time.Duration
+
+	Namespace      string
+	ServiceAccount string
+}
+
+// ChaosTestOptions identifies the configurable parameters for executing the chaos test.
+type ChaosTestOptions struct {
+	AnnotationCheck  string
+	EngineState      string
+	AuxiliaryAppInfo string
+	AppLabel         string
+	AppKind          string
+	Monitoring       bool
+	JobCleanupPolicy string
 }
 
 // NewExecute creates a new Execute object with given configuration.
@@ -64,11 +79,21 @@ func (e *Execute) ExperimentAndDeployment(args []string) (string, string, *appsv
 
 // Run executes the execute operation.
 func (e *Execute) Run(dep *appsv1.Deployment) error {
-	sa := ServiceAccount(e.Experiment+"-sa", e.Namespace)
-	r := Role(e.Experiment+"-sa", e.Namespace)
-	rb := RoleBinding(e.Experiment+"-sa", e.Namespace)
+	err := e.cfg.KubeClient.AnnotateDeployment(dep, map[string]string{"litmuschaos.io/chaos": "true"})
+	if err != nil {
+		return errors.Wrapf(err, "unable to annotate %s deployment object", dep.ObjectMeta.Name)
+	}
 
-	objs := []runtime.Object{sa, r, rb}
+	if e.ServiceAccount == "" {
+		e.ServiceAccount = e.Experiment + "-sa"
+	}
+
+	sa := ServiceAccount(e.ServiceAccount, e.Namespace)
+	r := Role(e.ServiceAccount, e.Namespace)
+	rb := RoleBinding(e.ServiceAccount, e.Namespace)
+	ce := ChaosEngine(e.TestName, e.ServiceAccount, e.Namespace, &e.ChaosTestOptions)
+
+	objs := []runtime.Object{sa, r, rb, ce}
 
 	for _, obj := range objs {
 		o, err := yaml.Marshal(obj)
@@ -84,11 +109,6 @@ func (e *Execute) Run(dep *appsv1.Deployment) error {
 		if _, err := e.cfg.KubeClient.Create(res); err != nil && !apierrors.IsAlreadyExists(err) {
 			return err
 		}
-	}
-
-	err := e.cfg.KubeClient.AnnotateDeployment(dep, map[string]string{"litmuschaos.io/chaos": "true"})
-	if err != nil {
-		return errors.Wrapf(err, "unable to annotate %s deployment object", dep.ObjectMeta.Name)
 	}
 
 	// Step 5: Chaos Engine
@@ -186,8 +206,32 @@ func RoleBinding(name, namespace string) *rbacv1beta1.RoleBinding {
 	return rb
 }
 
-// ChaosEngine
-func ChaosEngine() *chaosv1alpha1.ChaosEngine {
-	ce := &chaosv1alpha1.ChaosEngine{}
+// ChaosEngine connects the application instance to a Chaos Experiment.
+func ChaosEngine(name, serviceAccount, namespace string, opts *ChaosTestOptions) *chaosv1alpha1.ChaosEngine {
+	ce := &chaosv1alpha1.ChaosEngine{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "litmuschaos.io/v1alpha1",
+			Kind:       "ChaosEngine",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels:    map[string]string{"name": name},
+		},
+		Spec: chaosv1alpha1.ChaosEngineSpec{
+			AnnotationCheck:  opts.AnnotationCheck,
+			EngineState:      chaosv1alpha1.EngineState(opts.EngineState),
+			AuxiliaryAppInfo: opts.AuxiliaryAppInfo,
+			Appinfo: chaosv1alpha1.ApplicationParams{
+				Appns:    namespace,
+				Applabel: opts.AppLabel,
+				AppKind:  opts.AppKind,
+			},
+			ChaosServiceAccount: serviceAccount,
+			Monitoring:          opts.Monitoring,
+			JobCleanUpPolicy:    chaosv1alpha1.CleanUpPolicy(opts.JobCleanupPolicy),
+			Experiments:         nil,
+		},
+	}
 	return ce
 }
