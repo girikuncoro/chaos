@@ -2,6 +2,7 @@ package action
 
 import (
 	"bytes"
+	"strconv"
 	"strings"
 	"time"
 
@@ -25,17 +26,16 @@ type Execute struct {
 	ChartPathOptions
 	ChaosTestOptions
 
+	Namespace  string
 	TestName   string
 	Experiment string
 	Wait       bool
 	Timeout    time.Duration
-
-	Namespace      string
-	ServiceAccount string
 }
 
 // ChaosTestOptions identifies the configurable parameters for executing the chaos test.
 type ChaosTestOptions struct {
+	ServiceAccount   string
 	AnnotationCheck  string
 	EngineState      string
 	AuxiliaryAppInfo string
@@ -43,6 +43,8 @@ type ChaosTestOptions struct {
 	AppKind          string
 	Monitoring       bool
 	JobCleanupPolicy string
+	ChaosInterval    int
+	ChaosDuration    int
 }
 
 // NewExecute creates a new Execute object with given configuration.
@@ -84,14 +86,14 @@ func (e *Execute) Run(dep *appsv1.Deployment) error {
 		return errors.Wrapf(err, "unable to annotate %s deployment object", dep.ObjectMeta.Name)
 	}
 
-	if e.ServiceAccount == "" {
-		e.ServiceAccount = e.Experiment + "-sa"
+	if e.ChaosTestOptions.ServiceAccount == "" {
+		e.ChaosTestOptions.ServiceAccount = e.Experiment + "-sa"
 	}
 
-	sa := ServiceAccount(e.ServiceAccount, e.Namespace)
-	r := Role(e.ServiceAccount, e.Namespace)
-	rb := RoleBinding(e.ServiceAccount, e.Namespace)
-	ce := ChaosEngine(e.TestName, e.ServiceAccount, e.Namespace, &e.ChaosTestOptions)
+	sa := ServiceAccount(e.ChaosTestOptions.ServiceAccount, e.Namespace)
+	r := Role(e.ChaosTestOptions.ServiceAccount, e.Namespace)
+	rb := RoleBinding(e.ChaosTestOptions.ServiceAccount, e.Namespace)
+	ce := ChaosEngine(e.TestName, e.Experiment, e.Namespace, &e.ChaosTestOptions)
 
 	objs := []runtime.Object{sa, r, rb, ce}
 
@@ -207,7 +209,7 @@ func RoleBinding(name, namespace string) *rbacv1beta1.RoleBinding {
 }
 
 // ChaosEngine connects the application instance to a Chaos Experiment.
-func ChaosEngine(name, serviceAccount, namespace string, opts *ChaosTestOptions) *chaosv1alpha1.ChaosEngine {
+func ChaosEngine(name, experiment, namespace string, opts *ChaosTestOptions) *chaosv1alpha1.ChaosEngine {
 	ce := &chaosv1alpha1.ChaosEngine{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "litmuschaos.io/v1alpha1",
@@ -225,12 +227,27 @@ func ChaosEngine(name, serviceAccount, namespace string, opts *ChaosTestOptions)
 			Appinfo: chaosv1alpha1.ApplicationParams{
 				Appns:    namespace,
 				Applabel: opts.AppLabel,
-				AppKind:  opts.AppKind,
+				AppKind:  strings.ToLower(opts.AppKind),
 			},
-			ChaosServiceAccount: serviceAccount,
+			ChaosServiceAccount: opts.ServiceAccount,
 			Monitoring:          opts.Monitoring,
 			JobCleanUpPolicy:    chaosv1alpha1.CleanUpPolicy(opts.JobCleanupPolicy),
-			Experiments:         nil,
+			Experiments: []chaosv1alpha1.ExperimentList{
+				// TODO: Make this accepts list of experiment, instead of just one.
+				// Can possibly borrow helm's values passing/merging technique to support
+				// compelete experiment configuration.
+				{
+					Name: experiment,
+					Spec: chaosv1alpha1.ExperimentAttributes{
+						Components: chaosv1alpha1.ExperimentComponents{
+							ENV: []chaosv1alpha1.ExperimentENV{
+								{Name: "CHAOS_INTERVAL", Value: strconv.Itoa(opts.ChaosInterval)},
+								{Name: "TOTAL_CHAOS_DURATION", Value: strconv.Itoa(opts.ChaosDuration)},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 	return ce
