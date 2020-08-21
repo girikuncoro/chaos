@@ -106,6 +106,10 @@ func (c *Client) GetDeployment(name, namespace string) (*appsv1.Deployment, erro
 	if err != nil {
 		return nil, errors.Wrapf(err, "deployment %s is not found", name)
 	}
+	dep.TypeMeta = metav1.TypeMeta{
+		APIVersion: "v1",
+		Kind:       "Deployment",
+	}
 	return dep, nil
 }
 
