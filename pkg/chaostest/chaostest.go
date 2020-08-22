@@ -13,6 +13,7 @@ type ChaosTest struct {
 type ExperimentResult struct {
 	Experiment string `json:"experiment"`
 	Result     string `json:"result"`
+	Phase      string `json:"phase"`
 }
 
 // SetStatus is a helper for setting status on a ChaosTest.

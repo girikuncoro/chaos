@@ -1,6 +1,10 @@
 package action
 
-import "github.com/girikuncoro/chaos/pkg/chaostest"
+import (
+	"fmt"
+
+	"github.com/girikuncoro/chaos/pkg/chaostest"
+)
 
 // ListStates represents zero or more status code that a list item may have set
 type ListStates uint
@@ -60,6 +64,16 @@ func (l *List) Run() ([]*chaostest.ChaosTest, error) {
 	results, err := l.cfg.ChaosTests.List()
 	if err != nil {
 		return nil, err
+	}
+
+	// Conclude the status of chaos test
+	for _, res := range results {
+		for _, exp := range res.Experiments {
+			if exp.Phase == chaostest.StatusRunning.String() {
+				res.SetStatus(chaostest.StatusRunning, fmt.Sprintf("experiment %s is currently running", exp.Experiment))
+			}
+		}
+		res.SetStatus(chaostest.StatusCompleted, "all expeirments have been completed")
 	}
 	return results, nil
 }

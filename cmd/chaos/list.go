@@ -51,7 +51,6 @@ func newListCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
 type chaosTestElement struct {
 	Name        string `json:"name"`
 	Namespace   string `json:"namespace"`
-	Updated     string `json:"updated"`
 	Status      string `json:"status"`
 	Experiments string `json:"experiments"`
 }
@@ -66,8 +65,7 @@ func newChaosTestListWriter(chaosTests []*chaostest.ChaosTest) *chaosTestListWri
 		element := chaosTestElement{
 			Name:        ct.Name,
 			Namespace:   ct.Namespace,
-			Updated:     "TODO",
-			Status:      "TODO",
+			Status:      ct.Info.Status.String(),
 			Experiments: buildExperiments(ct.Experiments),
 		}
 		elements = append(elements, element)
@@ -77,9 +75,9 @@ func newChaosTestListWriter(chaosTests []*chaostest.ChaosTest) *chaosTestListWri
 
 func (t *chaosTestListWriter) WriteTable(out io.Writer) error {
 	table := uitable.New()
-	table.AddRow("NAME", "NAMESPACE", "UPDATED", "STATUS", "EXPERIMENTS")
+	table.AddRow("NAME", "NAMESPACE", "STATUS", "EXPERIMENTS")
 	for _, t := range t.chaosTests {
-		table.AddRow(t.Name, t.Namespace, t.Updated, t.Status, t.Experiments)
+		table.AddRow(t.Name, t.Namespace, t.Status, t.Experiments)
 	}
 	return output.EncodeTable(out, table)
 }
