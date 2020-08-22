@@ -16,3 +16,11 @@ func (s *Storage) ListChaosTests() ([]*chaostest.ChaosTest, error) {
 	s.Log("listing all chaos tests in storage")
 	return s.Driver.List()
 }
+
+// Init initializes a new storage backend with the driver d.
+func Init(d driver.Driver) *Storage {
+	return &Storage{
+		Driver: d,
+		Log:    func(_ string, _ ...interface{}) {},
+	}
+}
