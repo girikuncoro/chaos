@@ -1,10 +1,7 @@
 package driver
 
 import (
-	"strings"
-
 	"github.com/girikuncoro/chaos/pkg/chaostest"
-	v1alpha1 "github.com/litmuschaos/chaos-operator/pkg/apis/litmuschaos/v1alpha1"
 	chaosv1alpha1 "github.com/litmuschaos/chaos-operator/pkg/client/clientset/versioned/typed/litmuschaos/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -20,11 +17,11 @@ type LitmusCRDs struct {
 	Log             func(string, ...interface{})
 }
 
-func NewLitmusCRD(ceImpl chaosv1alpha1.ChaosEngineInterface) *LitmusCRDs {
+func NewLitmusCRD(ceImpl chaosv1alpha1.ChaosEngineInterface, crImpl chaosv1alpha1.ChaosResultInterface) *LitmusCRDs {
 	return &LitmusCRDs{
 		chaosEngineImpl: ceImpl,
-		// TODO: implement chaosResultImpl: crImpl,
-		Log: func(_ string, _ ...interface{}) {},
+		chaosResultImpl: crImpl,
+		Log:             func(_ string, _ ...interface{}) {},
 	}
 }
 
@@ -44,22 +41,29 @@ func (l *LitmusCRDs) List() ([]*chaostest.ChaosTest, error) {
 
 	var results []*chaostest.ChaosTest
 
-	// TODO: Gather status from chaosResult
 	for _, item := range chaosEngineList.Items {
+		var experimentResults []*chaostest.ExperimentResult
+		for _, exp := range item.Spec.Experiments {
+			rname := item.Name + "-" + exp.Name
+			opts := metav1.GetOptions{}
+			r, err := l.chaosResultImpl.Get(rname, opts)
+			if err != nil {
+				l.Log("get: failed to get %s: %s", rname, err)
+				return nil, err
+			}
+			er := &chaostest.ExperimentResult{
+				Experiment: r.Spec.ExperimentName,
+				Result:     r.Status.ExperimentStatus.Verdict,
+			}
+			experimentResults = append(experimentResults, er)
+		}
+
 		ct := &chaostest.ChaosTest{
 			Name:        item.Name,
 			Namespace:   item.Namespace,
-			Experiments: buildExperiments(item.Spec.Experiments),
+			Experiments: experimentResults,
 		}
 		results = append(results, ct)
 	}
 	return results, nil
-}
-
-func buildExperiments(experiments []v1alpha1.ExperimentList) string {
-	s := make([]string, len(experiments))
-	for i, exp := range experiments {
-		s[i] = exp.Name
-	}
-	return strings.Join(s, ",")
 }
