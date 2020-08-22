@@ -17,11 +17,11 @@ type LitmusCRDs struct {
 	Log             func(string, ...interface{})
 }
 
-func NewLitmusCRD(ceImpl chaosv1alpha1.ChaosEngineInterface, crImpl chaosv1alpha1.ChaosResultInterface) *LitmusCRDs {
+func NewLitmusCRD(ceImpl chaosv1alpha1.ChaosEngineInterface) *LitmusCRDs {
 	return &LitmusCRDs{
 		chaosEngineImpl: ceImpl,
-		chaosResultImpl: crImpl,
-		Log:             func(_ string, _ ...interface{}) {},
+		// TODO: implement chaosResultImpl: crImpl,
+		Log: func(_ string, _ ...interface{}) {},
 	}
 }
 
