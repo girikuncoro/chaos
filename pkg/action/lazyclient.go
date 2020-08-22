@@ -94,4 +94,50 @@ func (ce *chaosEngineClient) Patch(name string, pt types.PatchType, data []byte,
 	return nil, errors.New("function is not implemented yet")
 }
 
-// TODO: write chaosResultClient that implements chaosv1alpha1.ChaosResultInterface
+// chaosResultClient implements chaosv1alpha1.ChaosResultInterface
+type chaosResultClient struct{ *lazyClient }
+
+var _ chaosv1alpha1.ChaosResultInterface
+
+func newChaosResultClient(lc *lazyClient) *chaosResultClient {
+	return &chaosResultClient{lazyClient: lc}
+}
+
+func (cr *chaosResultClient) Create(chaosResult *v1alpha1.ChaosResult) (*v1alpha1.ChaosResult, error) {
+	return nil, errors.New("function is not implemented yet")
+}
+
+func (cr *chaosResultClient) Update(chaosResult *v1alpha1.ChaosResult) (*v1alpha1.ChaosResult, error) {
+	return nil, errors.New("function is not implemented yet")
+}
+
+func (cr *chaosResultClient) UpdateStatus(chaosResult *v1alpha1.ChaosResult) (*v1alpha1.ChaosResult, error) {
+	return nil, errors.New("function is not implemented yet")
+}
+
+func (cr *chaosResultClient) Delete(name string, opts *v1.DeleteOptions) error {
+	return errors.New("function is not implemented yet")
+}
+
+func (cr *chaosResultClient) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+	return errors.New("function is not implemented yet")
+}
+
+func (cr *chaosResultClient) Get(name string, opts v1.GetOptions) (*v1alpha1.ChaosResult, error) {
+	if err := cr.init(); err != nil {
+		return nil, err
+	}
+	return cr.client.LitmuschaosV1alpha1().ChaosResults(cr.namespace).Get(name, opts)
+}
+
+func (cr *chaosResultClient) List(opts v1.ListOptions) (*v1alpha1.ChaosResultList, error) {
+	return nil, errors.New("function is not implemented yet")
+}
+
+func (cr *chaosResultClient) Watch(opts v1.ListOptions) (watch.Interface, error) {
+	return nil, errors.New("function is not implemented yet")
+}
+
+func (cr *chaosResultClient) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.ChaosResult, err error) {
+	return nil, errors.New("function is not implemented yet")
+}

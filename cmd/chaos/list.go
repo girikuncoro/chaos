@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/girikuncoro/chaos/pkg/action"
 	"github.com/girikuncoro/chaos/pkg/chaostest"
@@ -67,7 +68,7 @@ func newChaosTestListWriter(chaosTests []*chaostest.ChaosTest) *chaosTestListWri
 			Namespace:   ct.Namespace,
 			Updated:     "TODO",
 			Status:      "TODO",
-			Experiments: ct.Experiments,
+			Experiments: buildExperiments(ct.Experiments),
 		}
 		elements = append(elements, element)
 	}
@@ -81,4 +82,12 @@ func (t *chaosTestListWriter) WriteTable(out io.Writer) error {
 		table.AddRow(t.Name, t.Namespace, t.Updated, t.Status, t.Experiments)
 	}
 	return output.EncodeTable(out, table)
+}
+
+func buildExperiments(results []*chaostest.ExperimentResult) string {
+	s := make([]string, len(results))
+	for i, r := range results {
+		s[i] = r.Experiment + "=" + r.Result
+	}
+	return strings.Join(s, ",")
 }

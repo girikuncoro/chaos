@@ -70,7 +70,7 @@ func (c *Configuration) Init(getter genericclioptions.RESTClientGetter, namespac
 	}
 
 	// TODO: Pass this through init and add switch cases
-	d := driver.NewLitmusCRD(newChaosEngineClient(lazyClient))
+	d := driver.NewLitmusCRD(newChaosEngineClient(lazyClient), newChaosResultClient(lazyClient))
 	d.Log = log
 	store := storage.Init(d)
 
