@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/girikuncoro/chaos/pkg/action"
@@ -28,20 +29,30 @@ func newListCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
 			if err != nil {
 				return err
 			}
+
+			if client.Short {
+				for _, res := range results {
+					fmt.Fprintln(out, res.Name)
+				}
+				return nil
+			}
+
 			return outfmt.Write(out, newChaosTestListWriter(results))
 		},
 	}
 
+	f := cmd.Flags()
+	f.BoolVarP(&client.Short, "short", "q", false, "output short (quiet) listing format")
 	bindOutputFlag(cmd, &outfmt)
 	return cmd
 }
 
 type chaosTestElement struct {
-	Name      string `json:"name"`
-	Namespace string `json:"namespace"`
-	Updated   string `json:"updated"`
-	Status    string `json:"status"`
-	Chart     string `json:"chart"`
+	Name        string `json:"name"`
+	Namespace   string `json:"namespace"`
+	Updated     string `json:"updated"`
+	Status      string `json:"status"`
+	Experiments string `json:"experiments"`
 }
 
 type chaosTestListWriter struct {
@@ -49,15 +60,25 @@ type chaosTestListWriter struct {
 }
 
 func newChaosTestListWriter(chaosTests []*chaostest.ChaosTest) *chaosTestListWriter {
-	_ = make([]chaosTestElement, 0, len(chaosTests))
-	return nil
+	elements := make([]chaosTestElement, 0, len(chaosTests))
+	for _, ct := range chaosTests {
+		element := chaosTestElement{
+			Name:        ct.Name,
+			Namespace:   ct.Namespace,
+			Updated:     "TODO",
+			Status:      "TODO",
+			Experiments: ct.Experiments,
+		}
+		elements = append(elements, element)
+	}
+	return &chaosTestListWriter{elements}
 }
 
 func (t *chaosTestListWriter) WriteTable(out io.Writer) error {
 	table := uitable.New()
-	table.AddRow("NAME", "NAMESPACE", "UPDATED", "STATUS", "CHART")
+	table.AddRow("NAME", "NAMESPACE", "UPDATED", "STATUS", "EXPERIMENTS")
 	for _, t := range t.chaosTests {
-		table.AddRow(t.Name, t.Namespace, t.Updated, t.Status, t.Chart)
+		table.AddRow(t.Name, t.Namespace, t.Updated, t.Status, t.Experiments)
 	}
 	return output.EncodeTable(out, table)
 }

@@ -38,6 +38,7 @@ type List struct {
 	cfg *Configuration
 
 	AllNamespaces bool
+	Short         bool
 	StateMask     ListStates
 }
 

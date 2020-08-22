@@ -1,7 +1,10 @@
 package driver
 
 import (
+	"strings"
+
 	"github.com/girikuncoro/chaos/pkg/chaostest"
+	v1alpha1 "github.com/litmuschaos/chaos-operator/pkg/apis/litmuschaos/v1alpha1"
 	chaosv1alpha1 "github.com/litmuschaos/chaos-operator/pkg/client/clientset/versioned/typed/litmuschaos/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -44,10 +47,19 @@ func (l *LitmusCRDs) List() ([]*chaostest.ChaosTest, error) {
 	// TODO: Gather status from chaosResult
 	for _, item := range chaosEngineList.Items {
 		ct := &chaostest.ChaosTest{
-			Name:      item.Name,
-			Namespace: item.Namespace,
+			Name:        item.Name,
+			Namespace:   item.Namespace,
+			Experiments: buildExperiments(item.Spec.Experiments),
 		}
 		results = append(results, ct)
 	}
 	return results, nil
+}
+
+func buildExperiments(experiments []v1alpha1.ExperimentList) string {
+	s := make([]string, len(experiments))
+	for i, exp := range experiments {
+		s[i] = exp.Name
+	}
+	return strings.Join(s, ",")
 }
