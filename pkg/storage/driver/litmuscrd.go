@@ -54,6 +54,7 @@ func (l *LitmusCRDs) List() ([]*chaostest.ChaosTest, error) {
 			er := &chaostest.ExperimentResult{
 				Experiment: r.Spec.ExperimentName,
 				Result:     r.Status.ExperimentStatus.Verdict,
+				Phase:      r.Status.ExperimentStatus.Phase,
 			}
 			experimentResults = append(experimentResults, er)
 		}
@@ -61,6 +62,7 @@ func (l *LitmusCRDs) List() ([]*chaostest.ChaosTest, error) {
 		ct := &chaostest.ChaosTest{
 			Name:        item.Name,
 			Namespace:   item.Namespace,
+			Info:        &chaostest.Info{},
 			Experiments: experimentResults,
 		}
 		results = append(results, ct)

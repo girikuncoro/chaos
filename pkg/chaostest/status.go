@@ -5,10 +5,14 @@ type Status string
 
 const (
 	StatusUnknown        Status = "unknown"
-	StatusExecuted       Status = "executed"
-	StatusFail           Status = "fail"
-	StatusPass           Status = "pass"
+	StatusRunning        Status = "running"
+	StatusCompleted      Status = "completed"
 	StatusPendingExecute Status = "pending-execute"
 )
 
 func (s Status) String() string { return string(s) }
+
+// IsPending determines if status is a state or a transition.
+func (s Status) IsPending() bool {
+	return s == StatusPendingExecute
+}
