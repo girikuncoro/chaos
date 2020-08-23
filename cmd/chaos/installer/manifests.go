@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	deploymentName         = "chaos-operator"
+	deploymentName         = "chaos-operator-ce"
 	serviceAccountName     = "litmus"
 	clusterRoleName        = "litmus"
 	clusterRoleBindingName = "litmus"
@@ -176,11 +176,11 @@ func generateDeployment(opts *Options) *appsv1.Deployment {
 					Containers: []v1.Container{
 						{
 							Name:            "chaos-operator",
-							Image:           opts.getImage(),
+							Image:           opts.getOperatorImage(),
 							Command:         []string{"chaos-operator"},
 							ImagePullPolicy: v1.PullAlways,
 							Env: []v1.EnvVar{
-								{Name: "CHAOS_RUNNER_IMAGE", Value: opts.getImage()},
+								{Name: "CHAOS_RUNNER_IMAGE", Value: opts.getRunnerImage()},
 								{Name: "WATCH_NAMESPACE", Value: ""},
 								{
 									Name: "POD_NAME",

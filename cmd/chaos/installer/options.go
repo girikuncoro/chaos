@@ -1,16 +1,19 @@
 package installer
 
 const (
-	defaultImage     = "litmuschaos/chaos-operator"
-	defaultNamespace = "litmus"
+	defaultOperatorImage = "litmuschaos/chaos-operator"
+	defaultRunnerImage   = "litmuschaos/chaos-runner"
+	defaultNamespace     = "litmus"
 )
 
 // Options control how to install Litmus into a cluster, upgrade, and uninstall Litmus from a cluster.
 type Options struct {
 	// Namespace is the Kubernetes namespace to use to deploy Litmus.
 	Namespace string
-	// ImageSpec identifies the image Litmus will use when deployed.
-	ImageSpec string
+	// ImageSpec identifies the image Litmus operator will use when deployed.
+	OperatorImageSpec string
+	// RunnerImageSpec identifies the image Litmus runner will use when deployed.
+	RunnerImageSpec string
 	// Replicas identify number of chaos-operator instances to run on the cluster
 	Replicas int
 }
@@ -23,9 +26,16 @@ func (opts *Options) getReplicas() *int32 {
 	return &replicas
 }
 
-func (opts *Options) getImage() string {
-	if opts.ImageSpec == "" {
-		return defaultImage + ":latest"
+func (opts *Options) getOperatorImage() string {
+	if opts.OperatorImageSpec == "" {
+		return defaultOperatorImage + ":latest"
 	}
-	return opts.ImageSpec
+	return opts.OperatorImageSpec
+}
+
+func (opts *Options) getRunnerImage() string {
+	if opts.RunnerImageSpec == "" {
+		return defaultRunnerImage + ":latest"
+	}
+	return opts.RunnerImageSpec
 }

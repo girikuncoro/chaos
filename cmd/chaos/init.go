@@ -31,7 +31,8 @@ func newInitCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
 }
 
 func addInitFlags(cmd *cobra.Command, f *pflag.FlagSet, client *action.Init) {
-	f.StringVarP(&client.Opts.ImageSpec, "litmus-image", "i", "", "override litmus image")
+	f.StringVarP(&client.Opts.OperatorImageSpec, "litmus-operator-image", "", "", "override litmus operator image")
+	f.StringVarP(&client.Opts.RunnerImageSpec, "litmus-runner-image", "", "", "override litmus runner image")
 	f.IntVar(&client.Opts.Replicas, "replicas", 1, "Amount of chaos-operator instances to run on the cluster")
 }
 

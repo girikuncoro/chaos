@@ -73,7 +73,7 @@ func (l *List) Run() ([]*chaostest.ChaosTest, error) {
 				res.SetStatus(chaostest.StatusRunning, fmt.Sprintf("experiment %s is currently running", exp.Experiment))
 			}
 		}
-		res.SetStatus(chaostest.StatusCompleted, "all expeirments have been completed")
+		res.SetStatus(chaostest.StatusCompleted, "all experiments have been completed")
 	}
 	return results, nil
 }
