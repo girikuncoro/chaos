@@ -85,6 +85,9 @@ func (t *chaosTestListWriter) WriteTable(out io.Writer) error {
 func buildExperiments(results []*chaostest.ExperimentResult) string {
 	s := make([]string, len(results))
 	for i, r := range results {
+		if r.Result == "" {
+			r.Result = chaostest.StatusUnknown.String()
+		}
 		s[i] = r.Experiment + "=" + r.Result
 	}
 	return strings.Join(s, ",")
