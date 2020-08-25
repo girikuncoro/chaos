@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/girikuncoro/chaos/cmd/chaos/require"
@@ -46,5 +47,10 @@ func runInstall(args []string, client *action.Install, out io.Writer) error {
 	}
 
 	debug("CHART PATH: %s\n", cp)
-	return client.Run(cp)
+	err = client.Run(cp)
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(out, "%q has been installed in namespace %q, ready for executing chaos in this namespace\n", chart, settings.Namespace())
+	return nil
 }
