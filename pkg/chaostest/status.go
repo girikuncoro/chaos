@@ -4,15 +4,15 @@ package chaostest
 type Status string
 
 const (
-	StatusUnknown        Status = "unknown"
-	StatusRunning        Status = "running"
-	StatusCompleted      Status = "completed"
-	StatusPendingExecute Status = "pending-execute"
+	StatusUnknown   Status = "unknown"
+	StatusRunning   Status = "running"
+	StatusCompleted Status = "completed"
+	StatusPending   Status = "pending"
 )
 
 func (s Status) String() string { return string(s) }
 
 // IsPending determines if status is a state or a transition.
 func (s Status) IsPending() bool {
-	return s == StatusPendingExecute
+	return s == StatusPending
 }

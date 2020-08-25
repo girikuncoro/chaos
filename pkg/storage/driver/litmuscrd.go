@@ -3,6 +3,7 @@ package driver
 import (
 	"github.com/girikuncoro/chaos/pkg/chaostest"
 	chaosv1alpha1 "github.com/litmuschaos/chaos-operator/pkg/client/clientset/versioned/typed/litmuschaos/v1alpha1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -45,16 +46,19 @@ func (l *LitmusCRDs) List() ([]*chaostest.ChaosTest, error) {
 		var experimentResults []*chaostest.ExperimentResult
 		for _, exp := range item.Spec.Experiments {
 			rname := item.Name + "-" + exp.Name
+			er := &chaostest.ExperimentResult{
+				Experiment: exp.Name,
+			}
+
 			opts := metav1.GetOptions{}
-			r, err := l.chaosResultImpl.Get(rname, opts)
-			if err != nil {
+			res, err := l.chaosResultImpl.Get(rname, opts)
+			if err != nil && !apierrors.IsNotFound(err) {
 				l.Log("get: failed to get %s: %s", rname, err)
 				return nil, err
 			}
-			er := &chaostest.ExperimentResult{
-				Experiment: r.Spec.ExperimentName,
-				Result:     r.Status.ExperimentStatus.Verdict,
-				Phase:      r.Status.ExperimentStatus.Phase,
+			if res != nil {
+				er.Result = res.Status.ExperimentStatus.Verdict
+				er.Phase = res.Status.ExperimentStatus.Phase
 			}
 			experimentResults = append(experimentResults, er)
 		}

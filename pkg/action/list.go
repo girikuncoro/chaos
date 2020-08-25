@@ -2,6 +2,7 @@ package action
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/girikuncoro/chaos/pkg/chaostest"
 )
@@ -69,11 +70,16 @@ func (l *List) Run() ([]*chaostest.ChaosTest, error) {
 	// Conclude the status of chaos test
 	for _, res := range results {
 		for _, exp := range res.Experiments {
-			if exp.Phase == chaostest.StatusRunning.String() {
-				res.SetStatus(chaostest.StatusRunning, fmt.Sprintf("experiment %s is currently running", exp.Experiment))
+			if exp.Phase == "" {
+				res.SetStatus(chaostest.StatusPending, fmt.Sprintf("experiment is starting"))
+			}
+			if strings.ToLower(exp.Phase) == chaostest.StatusRunning.String() {
+				res.SetStatus(chaostest.StatusRunning, fmt.Sprintf("experiment %q is currently running", exp.Experiment))
+			}
+			if strings.ToLower(exp.Phase) == chaostest.StatusCompleted.String() {
+				res.SetStatus(chaostest.StatusCompleted, "all experiments have been completed")
 			}
 		}
-		res.SetStatus(chaostest.StatusCompleted, "all experiments have been completed")
 	}
 	return results, nil
 }
