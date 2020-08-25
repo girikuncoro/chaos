@@ -1,16 +1,19 @@
 package main
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/girikuncoro/chaos/cmd/chaos/require"
 	"github.com/girikuncoro/chaos/pkg/action"
+	"github.com/girikuncoro/chaos/pkg/cli/output"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
 
 func newInitCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
 	client := action.NewInit(cfg)
+	var outfmt output.Format
 
 	cmd := &cobra.Command{
 		Use:   "init",
@@ -27,6 +30,7 @@ func newInitCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
 	}
 
 	addInitFlags(cmd, cmd.Flags(), client)
+	bindOutputFlag(cmd, &outfmt)
 	return cmd
 }
 
@@ -38,5 +42,13 @@ func addInitFlags(cmd *cobra.Command, f *pflag.FlagSet, client *action.Init) {
 
 func runInit(args []string, client *action.Init, out io.Writer) error {
 	debug("Initializing Litmus on Kubernetes cluster")
-	return client.Run()
+
+	err := client.Run()
+	if err != nil {
+		fmt.Fprintln(out, "error initializing")
+		return err
+	}
+
+	fmt.Fprintln(out, "chaos environment has been initialized in your cluster")
+	return nil
 }

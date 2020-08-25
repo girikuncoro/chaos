@@ -66,7 +66,13 @@ func runExecute(args []string, client *action.Execute, valueOpts *values.Options
 	client.Experiment = exp
 	client.ChaosTestOptions.AppKind = dep.TypeMeta.Kind
 	client.ChaosTestOptions.AppLabel = buildAppLabel(dep.Labels)
-	return client.Run(dep)
+
+	err = client.Run(dep)
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(out, "chaos experiment %q is being executed on %s %q in namespace %q, observe using kubectl or wait for completion in few minutes\n", exp, dep.TypeMeta.Kind, dep.Name, dep.Namespace)
+	return nil
 }
 
 // buildAppLabel constructs label with 'key=value' format from sets of object labels.
